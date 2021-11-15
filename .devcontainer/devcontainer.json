@@ -1,0 +1,7 @@
+{
+	"name": "ca-go",
+    "dockerFile": "./Dockerfile",
+	"extensions": [
+        "golang.go"
+    ]
+}
