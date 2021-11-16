@@ -35,7 +35,12 @@ if (warnings.length) {
 })()
 
 // Warn if `go.mod` is being updated without a change in `go.sum`.
-if (danger.git.modified_files.includes('go.mod') && !danger.git.modified_files.includes('go.sum')) {
+const allChangedFiles =
+  danger.git.created_files
+    .concat(danger.git.modified_files)
+    .concat(danger.git.deleted_files)
+
+if (allChangedFiles.includes('go.mod') && !allChangedFiles.includes('go.sum')) {
   warn('`go.mod` has been updated without a change in `go.sum`.')
 }
 
