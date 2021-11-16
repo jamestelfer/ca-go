@@ -77,11 +77,16 @@ func GetClient() (*Client, error) {
 type FlagName string
 
 type Client interface {
+	QueryBool(key FlagName, user User, defaultValue bool) (bool, error)
 	Shutdown() error
 }
 
 type ldClient struct {
 	wrappedClient *ld.LDClient
+}
+
+func (c *ldClient) QueryBool(key FlagName, user User, defaultValue bool) (bool, error) {
+	return c.wrappedClient.BoolVariation(string(key), user.ldUser, defaultValue)
 }
 
 func (c *ldClient) Shutdown() error {
