@@ -16,7 +16,8 @@ const (
 )
 
 type Config struct {
-	sdkKey string
+	sdkKey   string
+	initWait time.Duration
 }
 
 type ConfigOption func(c *Config)
@@ -24,6 +25,12 @@ type ConfigOption func(c *Config)
 func WithSDKKey(key string) ConfigOption {
 	return func(c *Config) {
 		c.sdkKey = key
+	}
+}
+
+func WithInitWait(t time.Duration) ConfigOption {
+	return func(c *Config) {
+		c.initWait = t
 	}
 }
 
@@ -47,7 +54,7 @@ func NewConfig(opts ...ConfigOption) (*Config, error) {
 func Start(c *Config) error {
 	ldConfig := ld.Config{}
 
-	wrappedClient, err := ld.MakeCustomClient(c.sdkKey, ldConfig, 2*time.Second)
+	wrappedClient, err := ld.MakeCustomClient(c.sdkKey, ldConfig, c.initWait)
 	if err != nil {
 		return fmt.Errorf("create LaunchDarkly client: %w", err)
 	}

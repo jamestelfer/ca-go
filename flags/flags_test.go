@@ -3,6 +3,7 @@ package flags_test
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/cultureamp/ca-go/flags"
 	"github.com/stretchr/testify/require"
@@ -25,4 +26,10 @@ func TestNewConfig(t *testing.T) {
 		require.NoError(t, err)
 	})
 
+	t.Run("allows an initialisation wait time to be specified", func(t *testing.T) {
+		_, err := flags.NewConfig(
+			flags.WithSDKKey("foobar"),
+			flags.WithInitWait(2*time.Second))
+		require.NoError(t, err)
+	})
 }
