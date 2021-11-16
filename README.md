@@ -17,3 +17,30 @@ A Go library with multiple packages to be shared by services.
 * Start to move some packages from the shims repo here. e.g. `/ref`. Keep using `glamplify` for existing packages.
 * Start to move packages from `glamplify` to here. Stop using `glamplify` when all packages are migrated.
 * Make this repo internal.
+
+## Contributing
+
+To work on `ca-go`, you'll need a working Go installation. The project currently
+targets Go 1.17.
+
+### Setting up your environment
+
+You can use [VSCode Remote
+Containers](https://code.visualstudio.com/docs/remote/containers) to get
+up-and-running quickly. A basic configuration is defined in the `.devcontainer/`
+directory. This works locally and via [GitHub
+Codespaces](https://github.com/features/codespaces).
+
+**Locally**:
+
+1. Clone `ca-go` and open the directory in VSCode.
+2. A prompt should appear on the bottom-right of the editor, offering to start a
+   Remote Containers session. Click **Reopen in Container**.
+3. If a prompt didn't appear, open the Command Palette (i.e. Cmd + Shift + P)
+   and select **Remote-Containers: Open Folder in Container...**
+
+**Codespaces**:
+
+1. Click the **Code** button above the source listing on the repository
+   homepage.
+2. Click **New codespace**.
