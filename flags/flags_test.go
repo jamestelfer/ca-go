@@ -66,6 +66,13 @@ func TestInitialisationSingleton(t *testing.T) {
 			flags.WithDynamoBaseURL(baseURL),
 		)
 		require.NoError(t, err)
+
+		err = flags.Configure(
+			flags.WithSDKKey("foobar"),
+			flags.WithDynamoBaseURL(baseURL),
+			flags.WithDaemonMode("dynamo-table-name", 10*time.Second),
+		)
+		require.NoError(t, err, "should not error when base URL provided before Dynamo table")
 	})
 
 	t.Run("does not allow both proxy and daemon modes", func(t *testing.T) {
