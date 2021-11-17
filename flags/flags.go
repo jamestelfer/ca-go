@@ -9,33 +9,65 @@ import (
 	ld "gopkg.in/launchdarkly/go-server-sdk.v5"
 )
 
-var flagsClient Client
+var (
+	flagsClient            *Client
+	errClientNotConfigured = errors.New("client not configured")
+)
 
 const (
 	defaultSDKKeyEnvironmentVariable = "LAUNCHDARKLY_SDK_KEY"
 )
 
-type Config struct {
-	sdkKey   string
-	initWait time.Duration
+func Configure(opts ...ConfigOption) error {
+	c, err := NewClient(opts...)
+	if err != nil {
+		return fmt.Errorf("configure client: %w", err)
+	}
+
+	flagsClient = c
+	return nil
 }
 
-type ConfigOption func(c *Config)
+func Connect() error {
+	if flagsClient == nil {
+		return errClientNotConfigured
+	}
+
+	return flagsClient.Connect()
+}
+
+func GetDefaultClient() (*Client, error) {
+	if flagsClient == nil {
+		return nil, errClientNotConfigured
+	}
+
+	return flagsClient, nil
+}
+
+type ConfigOption func(c *Client)
 
 func WithSDKKey(key string) ConfigOption {
-	return func(c *Config) {
+	return func(c *Client) {
 		c.sdkKey = key
 	}
 }
 
 func WithInitWait(t time.Duration) ConfigOption {
-	return func(c *Config) {
+	return func(c *Client) {
 		c.initWait = t
 	}
 }
 
-func NewConfig(opts ...ConfigOption) (*Config, error) {
-	c := &Config{}
+type FlagName string
+
+type Client struct {
+	sdkKey        string
+	initWait      time.Duration
+	wrappedClient *ld.LDClient
+}
+
+func NewClient(opts ...ConfigOption) (*Client, error) {
+	c := &Client{}
 	for _, opt := range opts {
 		opt(c)
 	}
@@ -51,7 +83,7 @@ func NewConfig(opts ...ConfigOption) (*Config, error) {
 	return c, nil
 }
 
-func Start(c *Config) error {
+func (c *Client) Connect() error {
 	ldConfig := ld.Config{}
 
 	wrappedClient, err := ld.MakeCustomClient(c.sdkKey, ldConfig, c.initWait)
@@ -59,36 +91,15 @@ func Start(c *Config) error {
 		return fmt.Errorf("create LaunchDarkly client: %w", err)
 	}
 
-	flagsClient = &ldClient{
-		wrappedClient: wrappedClient,
-	}
+	flagsClient.wrappedClient = wrappedClient
 
 	return nil
 }
 
-func GetClient() (*Client, error) {
-	if flagsClient == nil {
-		return nil, errors.New("client not started")
-	}
-
-	return &flagsClient, nil
-}
-
-type FlagName string
-
-type Client interface {
-	QueryBool(key FlagName, user User, defaultValue bool) (bool, error)
-	Shutdown() error
-}
-
-type ldClient struct {
-	wrappedClient *ld.LDClient
-}
-
-func (c *ldClient) QueryBool(key FlagName, user User, defaultValue bool) (bool, error) {
+func (c *Client) QueryBool(key FlagName, user User, defaultValue bool) (bool, error) {
 	return c.wrappedClient.BoolVariation(string(key), user.ldUser, defaultValue)
 }
 
-func (c *ldClient) Shutdown() error {
+func (c *Client) Shutdown() error {
 	return c.wrappedClient.Close()
 }
