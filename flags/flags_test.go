@@ -1,6 +1,7 @@
 package flags_test
 
 import (
+	"net/url"
 	"os"
 	"testing"
 	"time"
@@ -36,6 +37,16 @@ func TestInitialisationSingleton(t *testing.T) {
 			flags.WithInitWait(2*time.Second))
 		require.NoError(t, err)
 	})
+
+	t.Run("allows a Relay Proxy URL to be specified", func(t *testing.T) {
+		proxyURL, err := url.Parse("http://localhost:8030")
+		require.NoError(t, err)
+
+		err = flags.Configure(
+			flags.WithSDKKey("foobar"),
+			flags.WithRelayProxy(proxyURL))
+		require.NoError(t, err)
+	})
 }
 
 func TestInitialisationClient(t *testing.T) {
@@ -60,6 +71,16 @@ func TestInitialisationClient(t *testing.T) {
 		_, err := flags.NewClient(
 			flags.WithSDKKey("foobar"),
 			flags.WithInitWait(2*time.Second))
+		require.NoError(t, err)
+	})
+
+	t.Run("allows a Relay Proxy URL to be specified", func(t *testing.T) {
+		proxyURL, err := url.Parse("http://localhost:8030")
+		require.NoError(t, err)
+
+		_, err = flags.NewClient(
+			flags.WithSDKKey("foobar"),
+			flags.WithRelayProxy(proxyURL))
 		require.NoError(t, err)
 	})
 }

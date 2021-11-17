@@ -3,10 +3,12 @@ package flags
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"time"
 
 	ld "gopkg.in/launchdarkly/go-server-sdk.v5"
+	"gopkg.in/launchdarkly/go-server-sdk.v5/ldcomponents"
 )
 
 var (
@@ -58,11 +60,18 @@ func WithInitWait(t time.Duration) ConfigOption {
 	}
 }
 
+func WithRelayProxy(proxyURL *url.URL) ConfigOption {
+	return func(c *Client) {
+		c.relayProxyURL = proxyURL.String()
+	}
+}
+
 type FlagName string
 
 type Client struct {
 	sdkKey        string
 	initWait      time.Duration
+	relayProxyURL string
 	wrappedClient *ld.LDClient
 }
 
@@ -85,6 +94,10 @@ func NewClient(opts ...ConfigOption) (*Client, error) {
 
 func (c *Client) Connect() error {
 	ldConfig := ld.Config{}
+
+	if c.relayProxyURL != "" {
+		ldConfig.DataSource = ldcomponents.StreamingDataSource().BaseURI(c.relayProxyURL)
+	}
 
 	wrappedClient, err := ld.MakeCustomClient(c.sdkKey, ldConfig, c.initWait)
 	if err != nil {
