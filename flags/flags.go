@@ -113,6 +113,14 @@ func (c *Client) QueryBool(key FlagName, user User, defaultValue bool) (bool, er
 	return c.wrappedClient.BoolVariation(string(key), user.ldUser, defaultValue)
 }
 
+func (c *Client) QueryString(key FlagName, user User, defaultValue string) (string, error) {
+	return c.wrappedClient.StringVariation(string(key), user.ldUser, defaultValue)
+}
+
+func (c *Client) QueryInt(key FlagName, user User, defaultValue int) (int, error) {
+	return c.wrappedClient.IntVariation(string(key), user.ldUser, defaultValue)
+}
+
 func (c *Client) Shutdown() error {
 	return c.wrappedClient.Close()
 }
