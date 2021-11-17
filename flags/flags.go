@@ -64,33 +64,54 @@ func WithInitWait(t time.Duration) ConfigOption {
 
 func WithRelayProxy(proxyURL *url.URL) ConfigOption {
 	return func(c *Client) {
-		c.relayProxyURL = proxyURL.String()
+		c.proxyModeConfig = &proxyModeConfig{
+			relayProxyURL: proxyURL.String(),
+		}
 	}
 }
 
 func WithDaemonMode(dynamoTableName string, cacheTTL time.Duration) ConfigOption {
 	return func(c *Client) {
-		c.dynamoTableName = dynamoTableName
-		c.cacheTTL = cacheTTL
+		if c.daemonModeConfig == nil {
+			c.daemonModeConfig = &daemonModeConfig{}
+		}
+
+		c.daemonModeConfig = &daemonModeConfig{
+			dynamoTableName: dynamoTableName,
+			cacheTTL:        cacheTTL,
+		}
 	}
 }
 
 func WithDynamoBaseURL(baseURL *url.URL) ConfigOption {
 	return func(c *Client) {
-		c.dynamoBaseURL = baseURL.String()
+		if c.daemonModeConfig == nil {
+			c.daemonModeConfig = &daemonModeConfig{}
+		}
+
+		c.daemonModeConfig.dynamoBaseURL = baseURL.String()
 	}
 }
 
 type FlagName string
 
 type Client struct {
-	sdkKey          string
-	initWait        time.Duration
-	relayProxyURL   string
+	sdkKey           string
+	initWait         time.Duration
+	proxyModeConfig  *proxyModeConfig
+	daemonModeConfig *daemonModeConfig
+	wrappedConfig    ld.Config
+	wrappedClient    *ld.LDClient
+}
+
+type proxyModeConfig struct {
+	relayProxyURL string
+}
+
+type daemonModeConfig struct {
 	dynamoTableName string
 	dynamoBaseURL   string
 	cacheTTL        time.Duration
-	wrappedClient   *ld.LDClient
 }
 
 func NewClient(opts ...ConfigOption) (*Client, error) {
@@ -107,23 +128,21 @@ func NewClient(opts ...ConfigOption) (*Client, error) {
 		c.sdkKey = defaultSDKKey
 	}
 
-	if c.relayProxyURL != "" && c.dynamoTableName != "" {
+	if c.proxyModeConfig != nil && c.daemonModeConfig != nil {
 		return nil, errors.New("cannot supply both a Relay Proxy URL and a Dynamo table name")
+	}
+
+	if c.proxyModeConfig != nil {
+		c.wrappedConfig = configForProxyMode(c.proxyModeConfig)
+	} else if c.daemonModeConfig != nil {
+		c.wrappedConfig = configForDaemonMode(c.daemonModeConfig)
 	}
 
 	return c, nil
 }
 
 func (c *Client) Connect() error {
-	ldConfig := ld.Config{}
-
-	if c.relayProxyURL != "" {
-		ldConfig = configForProxyMode(c.relayProxyURL)
-	} else if c.dynamoTableName != "" {
-		ldConfig = configForDaemonMode(c.dynamoTableName, c.dynamoBaseURL, c.cacheTTL)
-	}
-
-	wrappedClient, err := ld.MakeCustomClient(c.sdkKey, ldConfig, c.initWait)
+	wrappedClient, err := ld.MakeCustomClient(c.sdkKey, c.wrappedConfig, c.initWait)
 	if err != nil {
 		return fmt.Errorf("create LaunchDarkly client: %w", err)
 	}
@@ -133,24 +152,24 @@ func (c *Client) Connect() error {
 	return nil
 }
 
-func configForProxyMode(proxyURL string) ld.Config {
+func configForProxyMode(cfg *proxyModeConfig) ld.Config {
 	return ld.Config{
-		DataSource: ldcomponents.StreamingDataSource().BaseURI(proxyURL),
+		DataSource: ldcomponents.StreamingDataSource().BaseURI(cfg.relayProxyURL),
 	}
 }
 
-func configForDaemonMode(dynamoTable string, dynamoBaseURL string, cacheTTL time.Duration) ld.Config {
-	datastoreBuilder := lddynamodb.DataStore(dynamoTable)
+func configForDaemonMode(cfg *daemonModeConfig) ld.Config {
+	datastoreBuilder := lddynamodb.DataStore(cfg.dynamoTableName)
 
-	if dynamoBaseURL != "" {
-		datastoreBuilder.ClientConfig(aws.NewConfig().WithEndpoint(dynamoBaseURL))
+	if cfg.dynamoBaseURL != "" {
+		datastoreBuilder.ClientConfig(aws.NewConfig().WithEndpoint(cfg.dynamoBaseURL))
 	}
 
 	return ld.Config{
 		DataSource: ldcomponents.ExternalUpdatesOnly(),
 		DataStore: ldcomponents.PersistentDataStore(
 			datastoreBuilder,
-		).CacheTime(cacheTTL),
+		).CacheTime(cfg.cacheTTL),
 	}
 }
 
