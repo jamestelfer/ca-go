@@ -7,6 +7,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	lddynamodb "github.com/launchdarkly/go-server-sdk-dynamodb"
 	ld "gopkg.in/launchdarkly/go-server-sdk.v5"
 	"gopkg.in/launchdarkly/go-server-sdk.v5/ldcomponents"
 )
@@ -66,13 +68,29 @@ func WithRelayProxy(proxyURL *url.URL) ConfigOption {
 	}
 }
 
+func WithDaemonMode(dynamoTableName string, cacheTTL time.Duration) ConfigOption {
+	return func(c *Client) {
+		c.dynamoTableName = dynamoTableName
+		c.cacheTTL = cacheTTL
+	}
+}
+
+func WithDynamoBaseURL(baseURL *url.URL) ConfigOption {
+	return func(c *Client) {
+		c.dynamoBaseURL = baseURL.String()
+	}
+}
+
 type FlagName string
 
 type Client struct {
-	sdkKey        string
-	initWait      time.Duration
-	relayProxyURL string
-	wrappedClient *ld.LDClient
+	sdkKey          string
+	initWait        time.Duration
+	relayProxyURL   string
+	dynamoTableName string
+	dynamoBaseURL   string
+	cacheTTL        time.Duration
+	wrappedClient   *ld.LDClient
 }
 
 func NewClient(opts ...ConfigOption) (*Client, error) {
@@ -89,6 +107,10 @@ func NewClient(opts ...ConfigOption) (*Client, error) {
 		c.sdkKey = defaultSDKKey
 	}
 
+	if c.relayProxyURL != "" && c.dynamoTableName != "" {
+		return nil, errors.New("cannot supply both a Relay Proxy URL and a Dynamo table name")
+	}
+
 	return c, nil
 }
 
@@ -96,7 +118,9 @@ func (c *Client) Connect() error {
 	ldConfig := ld.Config{}
 
 	if c.relayProxyURL != "" {
-		ldConfig.DataSource = ldcomponents.StreamingDataSource().BaseURI(c.relayProxyURL)
+		ldConfig = configForProxyMode(c.relayProxyURL)
+	} else if c.dynamoTableName != "" {
+		ldConfig = configForDaemonMode(c.dynamoTableName, c.dynamoBaseURL, c.cacheTTL)
 	}
 
 	wrappedClient, err := ld.MakeCustomClient(c.sdkKey, ldConfig, c.initWait)
@@ -107,6 +131,27 @@ func (c *Client) Connect() error {
 	flagsClient.wrappedClient = wrappedClient
 
 	return nil
+}
+
+func configForProxyMode(proxyURL string) ld.Config {
+	return ld.Config{
+		DataSource: ldcomponents.StreamingDataSource().BaseURI(proxyURL),
+	}
+}
+
+func configForDaemonMode(dynamoTable string, dynamoBaseURL string, cacheTTL time.Duration) ld.Config {
+	datastoreBuilder := lddynamodb.DataStore(dynamoTable)
+
+	if dynamoBaseURL != "" {
+		datastoreBuilder.ClientConfig(aws.NewConfig().WithEndpoint(dynamoBaseURL))
+	}
+
+	return ld.Config{
+		DataSource: ldcomponents.ExternalUpdatesOnly(),
+		DataStore: ldcomponents.PersistentDataStore(
+			datastoreBuilder,
+		).CacheTime(cacheTTL),
+	}
 }
 
 func (c *Client) QueryBool(key FlagName, user User, defaultValue bool) (bool, error) {
