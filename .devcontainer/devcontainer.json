@@ -2,6 +2,7 @@
 	"name": "ca-go",
     "dockerFile": "./Dockerfile",
 	"extensions": [
-        "golang.go"
+        "golang.go",
+        "ms-vscode.makefile-tools"
     ]
 }
