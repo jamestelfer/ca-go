@@ -47,6 +47,38 @@ func TestInitialisationSingleton(t *testing.T) {
 			flags.WithRelayProxy(proxyURL))
 		require.NoError(t, err)
 	})
+
+	t.Run("allows daemon mode to be configured", func(t *testing.T) {
+		err := flags.Configure(
+			flags.WithSDKKey("foobar"),
+			flags.WithDaemonMode("dynamo-table-name", 10*time.Second),
+		)
+		require.NoError(t, err)
+	})
+
+	t.Run("allows daemon mode to be configured with an alterate Dynamo base URL", func(t *testing.T) {
+		baseURL, err := url.Parse("http://localhost:6789")
+		require.NoError(t, err)
+
+		err = flags.Configure(
+			flags.WithSDKKey("foobar"),
+			flags.WithDaemonMode("dynamo-table-name", 10*time.Second),
+			flags.WithDynamoBaseURL(baseURL),
+		)
+		require.NoError(t, err)
+	})
+
+	t.Run("does not allow both proxy and daemon modes", func(t *testing.T) {
+		proxyURL, err := url.Parse("http://localhost:8030")
+		require.NoError(t, err)
+
+		err = flags.Configure(
+			flags.WithSDKKey("foobar"),
+			flags.WithDaemonMode("dynamo-table-name", 10*time.Second),
+			flags.WithRelayProxy(proxyURL),
+		)
+		require.Error(t, err)
+	})
 }
 
 func TestInitialisationClient(t *testing.T) {
@@ -82,5 +114,37 @@ func TestInitialisationClient(t *testing.T) {
 			flags.WithSDKKey("foobar"),
 			flags.WithRelayProxy(proxyURL))
 		require.NoError(t, err)
+	})
+
+	t.Run("allows daemon mode to be configured", func(t *testing.T) {
+		_, err := flags.NewClient(
+			flags.WithSDKKey("foobar"),
+			flags.WithDaemonMode("dynamo-table-name", 10*time.Second),
+		)
+		require.NoError(t, err)
+	})
+
+	t.Run("allows daemon mode to be configured with an alterate Dynamo base URL", func(t *testing.T) {
+		baseURL, err := url.Parse("http://localhost:6789")
+		require.NoError(t, err)
+
+		_, err = flags.NewClient(
+			flags.WithSDKKey("foobar"),
+			flags.WithDaemonMode("dynamo-table-name", 10*time.Second),
+			flags.WithDynamoBaseURL(baseURL),
+		)
+		require.NoError(t, err)
+	})
+
+	t.Run("does not allow both proxy and daemon modes", func(t *testing.T) {
+		proxyURL, err := url.Parse("http://localhost:8030")
+		require.NoError(t, err)
+
+		_, err = flags.NewClient(
+			flags.WithSDKKey("foobar"),
+			flags.WithDaemonMode("dynamo-table-name", 10*time.Second),
+			flags.WithRelayProxy(proxyURL),
+		)
+		require.Error(t, err)
 	})
 }
