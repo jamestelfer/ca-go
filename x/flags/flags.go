@@ -129,7 +129,7 @@ func NewClient(opts ...ConfigOption) (*Client, error) {
 	}
 
 	if c.proxyModeConfig != nil && c.daemonModeConfig != nil {
-		return nil, errors.New("cannot supply both a Relay Proxy URL and a Dynamo table name")
+		return nil, errors.New("cannot configure the SDK for Proxy and Daemon modes simultaneously")
 	}
 
 	if c.proxyModeConfig != nil {
