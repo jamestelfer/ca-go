@@ -3,7 +3,7 @@ package flags_test
 import (
 	"testing"
 
-	"github.com/cultureamp/ca-go/flags"
+	"github.com/cultureamp/ca-go/x/flags"
 )
 
 func TestNewUser(t *testing.T) {

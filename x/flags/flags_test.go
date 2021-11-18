@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cultureamp/ca-go/flags"
+	"github.com/cultureamp/ca-go/x/flags"
 	"github.com/stretchr/testify/require"
 )
 
