@@ -62,7 +62,7 @@ func WithInitWait(t time.Duration) ConfigOption {
 	}
 }
 
-func WithRelayProxy(proxyURL *url.URL) ConfigOption {
+func WithProxyMode(proxyURL *url.URL) ConfigOption {
 	return func(c *Client) {
 		c.proxyModeConfig = &proxyModeConfig{
 			relayProxyURL: proxyURL.String(),

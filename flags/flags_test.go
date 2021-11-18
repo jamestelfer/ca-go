@@ -44,7 +44,7 @@ func TestInitialisationSingleton(t *testing.T) {
 
 		err = flags.Configure(
 			flags.WithSDKKey("foobar"),
-			flags.WithRelayProxy(proxyURL))
+			flags.WithProxyMode(proxyURL))
 		require.NoError(t, err)
 	})
 
@@ -82,7 +82,7 @@ func TestInitialisationSingleton(t *testing.T) {
 		err = flags.Configure(
 			flags.WithSDKKey("foobar"),
 			flags.WithDaemonMode("dynamo-table-name", 10*time.Second),
-			flags.WithRelayProxy(proxyURL),
+			flags.WithProxyMode(proxyURL),
 		)
 		require.Error(t, err)
 	})
@@ -119,7 +119,7 @@ func TestInitialisationClient(t *testing.T) {
 
 		_, err = flags.NewClient(
 			flags.WithSDKKey("foobar"),
-			flags.WithRelayProxy(proxyURL))
+			flags.WithProxyMode(proxyURL))
 		require.NoError(t, err)
 	})
 
@@ -150,7 +150,7 @@ func TestInitialisationClient(t *testing.T) {
 		_, err = flags.NewClient(
 			flags.WithSDKKey("foobar"),
 			flags.WithDaemonMode("dynamo-table-name", 10*time.Second),
-			flags.WithRelayProxy(proxyURL),
+			flags.WithProxyMode(proxyURL),
 		)
 		require.Error(t, err)
 	})
