@@ -142,6 +142,10 @@ func NewClient(opts ...ConfigOption) (*Client, error) {
 }
 
 func (c *Client) Connect() error {
+	if c.wrappedClient != nil {
+		return errors.New("attempted to call Connect on a connected client")
+	}
+
 	wrappedClient, err := ld.MakeCustomClient(c.sdkKey, c.wrappedConfig, c.initWait)
 	if err != nil {
 		return fmt.Errorf("create LaunchDarkly client: %w", err)
