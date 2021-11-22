@@ -189,6 +189,10 @@ func (c *Client) QueryInt(key FlagName, user User, defaultValue int) (int, error
 	return c.wrappedClient.IntVariation(string(key), user.ldUser, defaultValue)
 }
 
+func (c *Client) RawClient() *ld.LDClient {
+	return c.wrappedClient
+}
+
 func (c *Client) Shutdown() error {
 	return c.wrappedClient.Close()
 }
