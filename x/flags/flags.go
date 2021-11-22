@@ -189,7 +189,7 @@ func (c *Client) QueryInt(key FlagName, user User, defaultValue int) (int, error
 	return c.wrappedClient.IntVariation(string(key), user.ldUser, defaultValue)
 }
 
-func (c *Client) RawClient() *ld.LDClient {
+func (c *Client) RawClient() interface{} {
 	return c.wrappedClient
 }
 
