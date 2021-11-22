@@ -47,6 +47,6 @@ func NewUser(userAggregateID string, opts ...UserOption) User {
 	return *u
 }
 
-func (u User) RawUser() lduser.User {
+func (u User) RawUser() interface{} {
 	return u.ldUser
 }
