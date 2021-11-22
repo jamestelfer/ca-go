@@ -46,3 +46,7 @@ func NewUser(userAggregateID string, opts ...UserOption) User {
 
 	return *u
 }
+
+func (u User) RawUser() lduser.User {
+	return u.ldUser
+}
