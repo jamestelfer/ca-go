@@ -56,7 +56,7 @@ func TestInitialisationSingleton(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("allows daemon mode to be configured with an alterate Dynamo base URL", func(t *testing.T) {
+	t.Run("allows daemon mode to be configured with an alternate Dynamo base URL", func(t *testing.T) {
 		baseURL, err := url.Parse("http://localhost:6789")
 		require.NoError(t, err)
 
