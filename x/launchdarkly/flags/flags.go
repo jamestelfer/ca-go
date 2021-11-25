@@ -115,7 +115,7 @@ func (c *Client) Connect() error {
 func (c *Client) QueryBool(ctx context.Context, key FlagName, defaultValue bool) (bool, error) {
 	user, err := UserFromContext(ctx)
 	if err != nil {
-		return false, fmt.Errorf("get user from context: %w", err)
+		return defaultValue, fmt.Errorf("get user from context: %w", err)
 	}
 
 	return c.wrappedClient.BoolVariation(string(key), user.ldUser, defaultValue)
@@ -134,7 +134,7 @@ func (c *Client) QueryBoolWithUser(key FlagName, user User, defaultValue bool) (
 func (c *Client) QueryString(ctx context.Context, key FlagName, defaultValue string) (string, error) {
 	user, err := UserFromContext(ctx)
 	if err != nil {
-		return "", fmt.Errorf("get user from context: %w", err)
+		return defaultValue, fmt.Errorf("get user from context: %w", err)
 	}
 
 	return c.wrappedClient.StringVariation(string(key), user.ldUser, defaultValue)
@@ -153,7 +153,7 @@ func (c *Client) QueryStringWithUser(key FlagName, user User, defaultValue strin
 func (c *Client) QueryInt(ctx context.Context, key FlagName, defaultValue int) (int, error) {
 	user, err := UserFromContext(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("get user from context: %w", err)
+		return defaultValue, fmt.Errorf("get user from context: %w", err)
 	}
 
 	return c.wrappedClient.IntVariation(string(key), user.ldUser, defaultValue)
