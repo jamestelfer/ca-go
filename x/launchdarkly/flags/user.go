@@ -15,6 +15,7 @@ const (
 	userAttributeRealUserAggregateID = "realUserAggregateID"
 )
 
+// User wraps the LaunchDarkly user object.
 type User struct {
 	effectiveUserAggregateID string
 	realUserAggregateID      string
@@ -23,26 +24,34 @@ type User struct {
 	ldUser lduser.User
 }
 
+// UserOption are functions that can be supplied to configure a new user with
+// additional attributes.
 type UserOption func(*User)
 
+// WithAccountAggregateID configures the user with the given account aggregate ID.
 func WithAccountAggregateID(id string) UserOption {
 	return func(u *User) {
 		u.accountAggregateID = id
 	}
 }
 
+// WithRealUserAggregateID configures the user with the given real user aggregate ID.
 func WithRealUserAggregateID(id string) UserOption {
 	return func(u *User) {
 		u.realUserAggregateID = id
 	}
 }
 
+// NewAnonymousUser returns a user object suitable for use in unauthenticated
+// requests or requests with no access to user identifiers.
 func NewAnonymousUser() User {
 	return User{
 		ldUser: lduser.NewAnonymousUser(anonymousUser),
 	}
 }
 
+// NewUser returns a new user object with the given effective user aggregate ID
+// and options.
 func NewUser(effectiveUserAggregateID string, opts ...UserOption) User {
 	u := &User{
 		effectiveUserAggregateID: effectiveUserAggregateID,
@@ -64,10 +73,16 @@ func NewUser(effectiveUserAggregateID string, opts ...UserOption) User {
 	return *u
 }
 
+// RawUser returns the wrapped LaunchDarkly user object. The return value should
+// be casted to an lduser.User object.
 func (u User) RawUser() interface{} {
 	return u.ldUser
 }
 
+// UserFromContext extracts the effective user aggregate ID, real user aggregate
+// ID, and account aggregate ID from the context. These values are used to
+// create a new User object. An error is returned if user identifiers are not
+// present in the context.
 func UserFromContext(ctx context.Context) (User, error) {
 	authenticatedUser, ok := request.AuthenticatedUserFromContext(ctx)
 	if !ok {
