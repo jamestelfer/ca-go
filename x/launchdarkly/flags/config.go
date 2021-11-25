@@ -23,20 +23,28 @@ type daemonModeConfig struct {
 	cacheTTL        time.Duration
 }
 
+// ConfigOption are functions that can be supplied to Configure and NewClient to
+// configure the flags client.
 type ConfigOption func(c *Client)
 
+// WithSDKKey configures the client to use the given SDK key to authenticate
+// against LaunchDarkly.
 func WithSDKKey(key string) ConfigOption {
 	return func(c *Client) {
 		c.sdkKey = key
 	}
 }
 
+// WithInitWait configures the client to wait for the given duration for the
+// LaunchDarkly client to connect.
 func WithInitWait(t time.Duration) ConfigOption {
 	return func(c *Client) {
 		c.initWait = t
 	}
 }
 
+// WithProxyMode configures the client to establish a connection to LaunchDarkly
+// via a Relay Proxy.
 func WithProxyMode(proxyURL *url.URL) ConfigOption {
 	return func(c *Client) {
 		c.proxyModeConfig = &proxyModeConfig{
@@ -45,6 +53,8 @@ func WithProxyMode(proxyURL *url.URL) ConfigOption {
 	}
 }
 
+// WithDaemonMode configures the client to source flag data from a DynamoDB
+// table, bypassing a direct connection to LaunchDarkly completely.
 func WithDaemonMode(dynamoTableName string, cacheTTL time.Duration) ConfigOption {
 	return func(c *Client) {
 		if c.daemonModeConfig == nil {
@@ -58,6 +68,11 @@ func WithDaemonMode(dynamoTableName string, cacheTTL time.Duration) ConfigOption
 	}
 }
 
+// WithDynamoBaseURL configures the client to use the given base URL for
+// DyanmoDB, overriding any AWS configuration implicit in the environment.
+//
+// This will typically only be used in local development or testing, where you
+// might supply the URL of a local DynamoDB instance.
 func WithDynamoBaseURL(baseURL *url.URL) ConfigOption {
 	return func(c *Client) {
 		if c.daemonModeConfig == nil {
