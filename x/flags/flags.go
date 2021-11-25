@@ -1,6 +1,7 @@
 package flags
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -92,15 +93,42 @@ func (c *Client) Connect() error {
 	return nil
 }
 
-func (c *Client) QueryBool(key FlagName, user User, defaultValue bool) (bool, error) {
+func (c *Client) QueryBool(ctx context.Context, key FlagName, defaultValue bool) (bool, error) {
+	user, err := UserFromContext(ctx)
+	if err != nil {
+		return false, fmt.Errorf("get user from context: %w", err)
+	}
+
 	return c.wrappedClient.BoolVariation(string(key), user.ldUser, defaultValue)
 }
 
-func (c *Client) QueryString(key FlagName, user User, defaultValue string) (string, error) {
+func (c *Client) QueryBoolWithUser(key FlagName, user User, defaultValue bool) (bool, error) {
+	return c.wrappedClient.BoolVariation(string(key), user.ldUser, defaultValue)
+}
+
+func (c *Client) QueryString(ctx context.Context, key FlagName, defaultValue string) (string, error) {
+	user, err := UserFromContext(ctx)
+	if err != nil {
+		return "", fmt.Errorf("get user from context: %w", err)
+	}
+
 	return c.wrappedClient.StringVariation(string(key), user.ldUser, defaultValue)
 }
 
-func (c *Client) QueryInt(key FlagName, user User, defaultValue int) (int, error) {
+func (c *Client) QueryStringWithUser(key FlagName, user User, defaultValue string) (string, error) {
+	return c.wrappedClient.StringVariation(string(key), user.ldUser, defaultValue)
+}
+
+func (c *Client) QueryInt(ctx context.Context, key FlagName, defaultValue int) (int, error) {
+	user, err := UserFromContext(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("get user from context: %w", err)
+	}
+
+	return c.wrappedClient.IntVariation(string(key), user.ldUser, defaultValue)
+}
+
+func (c *Client) QueryIntWithUser(key FlagName, user User, defaultValue int) (int, error) {
 	return c.wrappedClient.IntVariation(string(key), user.ldUser, defaultValue)
 }
 
