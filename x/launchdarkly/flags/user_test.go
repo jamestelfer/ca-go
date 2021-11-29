@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cultureamp/ca-go/request"
 	"github.com/cultureamp/ca-go/x/launchdarkly/flags"
+	"github.com/cultureamp/ca-go/x/request"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
