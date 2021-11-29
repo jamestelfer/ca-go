@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/cultureamp/ca-go/request"
+	"github.com/cultureamp/ca-go/x/request"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/ldvalue"
 )
