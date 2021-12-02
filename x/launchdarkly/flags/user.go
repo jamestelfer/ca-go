@@ -10,16 +10,16 @@ import (
 )
 
 const (
-	anonymousUser                    = "ANONYMOUS_USER"
-	userAttributeAccountAggregateID  = "accountAggregateID"
-	userAttributeRealUserAggregateID = "realUserAggregateID"
+	anonymousUser                  = "ANONYMOUS_USER"
+	userAttributeCustomerAccountID = "customerAccountID"
+	userAttributeRealUserID        = "realUserID"
 )
 
 // User wraps the LaunchDarkly user object.
 type User struct {
-	effectiveUserAggregateID string
-	realUserAggregateID      string
-	accountAggregateID       string
+	userID            string
+	realUserID        string
+	customerAccountID string
 
 	ldUser lduser.User
 }
@@ -28,17 +28,17 @@ type User struct {
 // additional attributes.
 type UserOption func(*User)
 
-// WithAccountAggregateID configures the user with the given account aggregate ID.
-func WithAccountAggregateID(id string) UserOption {
+// WithCustomerAccountID configures the user with the given account aggregate ID.
+func WithCustomerAccountID(id string) UserOption {
 	return func(u *User) {
-		u.accountAggregateID = id
+		u.customerAccountID = id
 	}
 }
 
-// WithRealUserAggregateID configures the user with the given real user aggregate ID.
-func WithRealUserAggregateID(id string) UserOption {
+// WithRealUserID configures the user with the given real user aggregate ID.
+func WithRealUserID(id string) UserOption {
 	return func(u *User) {
-		u.realUserAggregateID = id
+		u.realUserID = id
 	}
 }
 
@@ -52,22 +52,22 @@ func NewAnonymousUser() User {
 
 // NewUser returns a new user object with the given effective user aggregate ID
 // and options.
-func NewUser(effectiveUserAggregateID string, opts ...UserOption) User {
+func NewUser(userID string, opts ...UserOption) User {
 	u := &User{
-		effectiveUserAggregateID: effectiveUserAggregateID,
+		userID: userID,
 	}
 
 	for _, opt := range opts {
 		opt(u)
 	}
 
-	userBuilder := lduser.NewUserBuilder(effectiveUserAggregateID)
+	userBuilder := lduser.NewUserBuilder(userID)
 	userBuilder.Custom(
-		userAttributeAccountAggregateID,
-		ldvalue.String(u.accountAggregateID))
+		userAttributeCustomerAccountID,
+		ldvalue.String(u.customerAccountID))
 	userBuilder.Custom(
-		userAttributeRealUserAggregateID,
-		ldvalue.String(u.realUserAggregateID))
+		userAttributeRealUserID,
+		ldvalue.String(u.realUserID))
 	u.ldUser = userBuilder.Build()
 
 	return *u
@@ -90,7 +90,7 @@ func UserFromContext(ctx context.Context) (User, error) {
 	}
 
 	return NewUser(
-		authenticatedUser.EffectiveUserAggregateID,
-		WithAccountAggregateID(authenticatedUser.AccountAggregateID),
-		WithRealUserAggregateID(authenticatedUser.RealUserAggregateID)), nil
+		authenticatedUser.UserID,
+		WithCustomerAccountID(authenticatedUser.CustomerAccountID),
+		WithRealUserID(authenticatedUser.RealUserID)), nil
 }
