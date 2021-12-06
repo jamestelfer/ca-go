@@ -28,14 +28,17 @@ type User struct {
 // additional attributes.
 type UserOption func(*User)
 
-// WithCustomerAccountID configures the user with the given account aggregate ID.
+// WithCustomerAccountID configures the user with the given account ID.
+// This is the ID of the currently logged in user's parent account/organization,
+// sometimes known as the "account_aggregate_id".
 func WithCustomerAccountID(id string) UserOption {
 	return func(u *User) {
 		u.customerAccountID = id
 	}
 }
 
-// WithRealUserID configures the user with the given real user aggregate ID.
+// WithRealUserID configures the user with the given real user ID.
+// This is the ID of the user who is currently impersonating the current user.
 func WithRealUserID(id string) UserOption {
 	return func(u *User) {
 		u.realUserID = id
@@ -50,8 +53,9 @@ func NewAnonymousUser() User {
 	}
 }
 
-// NewUser returns a new user object with the given effective user aggregate ID
-// and options.
+// NewUser returns a new user object with the given user ID and options.
+// userID is the ID of the currently authenticated user, and will generally
+// be a "user_aggregate_id".
 func NewUser(userID string, opts ...UserOption) User {
 	u := &User{
 		userID: userID,
