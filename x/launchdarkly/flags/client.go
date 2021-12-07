@@ -69,60 +69,60 @@ func (c *Client) Connect() error {
 }
 
 // QueryBool retrieves the value of a boolean flag. User attributes are
-// extracted from the context. The supplied default value is always reflected in
+// extracted from the context. The supplied fallback value is always reflected in
 // the returned value regardless of whether an error occurs.
-func (c *Client) QueryBool(ctx context.Context, key FlagName, defaultValue bool) (bool, error) {
+func (c *Client) QueryBool(ctx context.Context, key FlagName, fallbackValue bool) (bool, error) {
 	user, err := UserFromContext(ctx)
 	if err != nil {
-		return defaultValue, fmt.Errorf("get user from context: %w", err)
+		return fallbackValue, fmt.Errorf("get user from context: %w", err)
 	}
 
-	return c.wrappedClient.BoolVariation(string(key), user.ldUser, defaultValue)
+	return c.wrappedClient.BoolVariation(string(key), user.ldUser, fallbackValue)
 }
 
 // QueryBoolWithUser retrieves the value of a boolean flag. A User object must
-// be supplied manually. The supplied default value is always reflected in the
+// be supplied manually. The supplied fallback value is always reflected in the
 // returned value regardless of whether an error occurs.
-func (c *Client) QueryBoolWithUser(key FlagName, user User, defaultValue bool) (bool, error) {
-	return c.wrappedClient.BoolVariation(string(key), user.ldUser, defaultValue)
+func (c *Client) QueryBoolWithUser(key FlagName, user User, fallbackValue bool) (bool, error) {
+	return c.wrappedClient.BoolVariation(string(key), user.ldUser, fallbackValue)
 }
 
 // QueryString retrieves the value of a string flag. User attributes are
-// extracted from the context. The supplied default value is always reflected in
+// extracted from the context. The supplied fallback value is always reflected in
 // the returned value regardless of whether an error occurs.
-func (c *Client) QueryString(ctx context.Context, key FlagName, defaultValue string) (string, error) {
+func (c *Client) QueryString(ctx context.Context, key FlagName, fallbackValue string) (string, error) {
 	user, err := UserFromContext(ctx)
 	if err != nil {
-		return defaultValue, fmt.Errorf("get user from context: %w", err)
+		return fallbackValue, fmt.Errorf("get user from context: %w", err)
 	}
 
-	return c.wrappedClient.StringVariation(string(key), user.ldUser, defaultValue)
+	return c.wrappedClient.StringVariation(string(key), user.ldUser, fallbackValue)
 }
 
 // QueryStringWithUser retrieves the value of a string flag. A User object must
-// be supplied manually. The supplied default value is always reflected in the
+// be supplied manually. The supplied fallback value is always reflected in the
 // returned value regardless of whether an error occurs.
-func (c *Client) QueryStringWithUser(key FlagName, user User, defaultValue string) (string, error) {
-	return c.wrappedClient.StringVariation(string(key), user.ldUser, defaultValue)
+func (c *Client) QueryStringWithUser(key FlagName, user User, fallbackValue string) (string, error) {
+	return c.wrappedClient.StringVariation(string(key), user.ldUser, fallbackValue)
 }
 
 // QueryInt retrieves the value of an integer flag. User attributes are
-// extracted from the context. The supplied default value is always reflected in
+// extracted from the context. The supplied fallback value is always reflected in
 // the returned value regardless of whether an error occurs.
-func (c *Client) QueryInt(ctx context.Context, key FlagName, defaultValue int) (int, error) {
+func (c *Client) QueryInt(ctx context.Context, key FlagName, fallbackValue int) (int, error) {
 	user, err := UserFromContext(ctx)
 	if err != nil {
-		return defaultValue, fmt.Errorf("get user from context: %w", err)
+		return fallbackValue, fmt.Errorf("get user from context: %w", err)
 	}
 
-	return c.wrappedClient.IntVariation(string(key), user.ldUser, defaultValue)
+	return c.wrappedClient.IntVariation(string(key), user.ldUser, fallbackValue)
 }
 
 // QueryIntWithUser retrieves the value of an integer flag. A User object must
-// be supplied manually. The supplied default value is always reflected in the
+// be supplied manually. The supplied fallback value is always reflected in the
 // returned value regardless of whether an error occurs.
-func (c *Client) QueryIntWithUser(key FlagName, user User, defaultValue int) (int, error) {
-	return c.wrappedClient.IntVariation(string(key), user.ldUser, defaultValue)
+func (c *Client) QueryIntWithUser(key FlagName, user User, fallbackValue int) (int, error) {
+	return c.wrappedClient.IntVariation(string(key), user.ldUser, fallbackValue)
 }
 
 // RawClient returns the wrapped LaunchDarkly client. The return value should be
