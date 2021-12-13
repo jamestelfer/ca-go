@@ -88,6 +88,23 @@ func (c *Client) QueryBoolWithEvaluationContext(key FlagName, evalContext evalua
 	return c.wrappedClient.BoolVariation(string(key), evalContext.ToLDUser(), fallbackValue)
 }
 
+func (c *Client) QueryBoolWithEvaluationContexts(key FlagName, fallbackValues []bool, evalContexts ...evaluationcontext.Context) ([]bool, error) {
+	results := []bool{}
+	if len(fallbackValues) != len(evalContexts) {
+		return fallbackValues, errors.New("number of fallback values must match number of evaluation contexts")
+	}
+
+	for i, evalContext := range evalContexts {
+		val, err := c.wrappedClient.BoolVariation(string(key), evalContext.ToLDUser(), fallbackValues[i])
+		if err != nil {
+			return fallbackValues, err
+		}
+		results = append(results, val)
+	}
+
+	return results, nil
+}
+
 // QueryString retrieves the value of a string flag. User attributes are
 // extracted from the context. The supplied fallback value is always reflected in
 // the returned value regardless of whether an error occurs.
