@@ -1,4 +1,4 @@
-package flags
+package evaluationcontext
 
 import (
 	"context"
@@ -15,13 +15,18 @@ const (
 	userAttributeRealUserID        = "realUserID"
 )
 
-// User wraps the LaunchDarkly user object.
+// User is a type of evaluation context, representing the current active
+// user for which to evaluate a flag.
 type User struct {
 	userID            string
 	realUserID        string
 	customerAccountID string
 
 	ldUser lduser.User
+}
+
+func (u User) ToLDUser() lduser.User {
+	return u.ldUser
 }
 
 // UserOption are functions that can be supplied to configure a new user with
