@@ -1,10 +1,10 @@
-package flags_test
+package evaluationcontext_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/cultureamp/ca-go/x/launchdarkly/flags"
+	"github.com/cultureamp/ca-go/x/launchdarkly/flags/evaluationcontext"
 	"github.com/cultureamp/ca-go/x/request"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -13,18 +13,18 @@ import (
 
 func TestNewUser(t *testing.T) {
 	t.Run("can create an anonymous user", func(t *testing.T) {
-		user := flags.NewAnonymousUser()
+		user := evaluationcontext.NewAnonymousUser()
 		assertUserAttributes(t, user, "ANONYMOUS_USER", "", "")
 	})
 
 	t.Run("can create an identified user", func(t *testing.T) {
-		user := flags.NewUser("not-a-uuid")
+		user := evaluationcontext.NewUser("not-a-uuid")
 		assertUserAttributes(t, user, "not-a-uuid", "", "")
 
-		user = flags.NewUser(
+		user = evaluationcontext.NewUser(
 			"not-a-uuid",
-			flags.WithCustomerAccountID("not-a-uuid"),
-			flags.WithRealUserID("not-a-uuid"))
+			evaluationcontext.WithCustomerAccountID("not-a-uuid"),
+			evaluationcontext.WithRealUserID("not-a-uuid"))
 		assertUserAttributes(t, user, "not-a-uuid", "not-a-uuid", "not-a-uuid")
 	})
 
@@ -38,19 +38,20 @@ func TestNewUser(t *testing.T) {
 
 		ctx = request.ContextWithAuthenticatedUser(ctx, user)
 
-		flagsUser, err := flags.UserFromContext(ctx)
+		flagsUser, err := evaluationcontext.UserFromContext(ctx)
 		require.NoError(t, err)
 		assertUserAttributes(t, flagsUser, "789", "456", "123")
 	})
 }
 
-func assertUserAttributes(t *testing.T, user flags.User, effectiveUserAggregateID, realUserAggregateID, accountAggregateID string) {
+func assertUserAttributes(t *testing.T, user evaluationcontext.User, effectiveUserAggregateID, realUserAggregateID, accountAggregateID string) {
 	t.Helper()
 
 	ldUser, ok := user.RawUser().(lduser.User)
 	require.True(t, ok, "should be castable to a LaunchDarkly user object")
 
 	assert.Equal(t, effectiveUserAggregateID, ldUser.GetKey())
-	assert.Equal(t, realUserAggregateID, ldUser.GetAttribute("realUserID").StringValue())
-	assert.Equal(t, accountAggregateID, ldUser.GetAttribute("customerAccountID").StringValue())
+	assert.Equal(t, realUserAggregateID, ldUser.GetAttribute("user.realUserID").StringValue())
+	assert.Equal(t, accountAggregateID, ldUser.GetAttribute("user.customerAccountID").StringValue())
+	assert.Equal(t, "user", ldUser.GetAttribute("entityType").StringValue())
 }

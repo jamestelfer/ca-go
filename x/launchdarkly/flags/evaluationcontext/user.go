@@ -1,4 +1,4 @@
-package flags
+package evaluationcontext
 
 import (
 	"context"
@@ -9,19 +9,24 @@ import (
 	"gopkg.in/launchdarkly/go-sdk-common.v2/ldvalue"
 )
 
-const (
+var (
 	anonymousUser                  = "ANONYMOUS_USER"
-	userAttributeCustomerAccountID = "customerAccountID"
-	userAttributeRealUserID        = "realUserID"
+	userAttributeCustomerAccountID = "user.customerAccountID"
+	userAttributeRealUserID        = "user.realUserID"
 )
 
-// User wraps the LaunchDarkly user object.
+// User is a type of context, representing the identifiers and attributes of
+// a human user to evaluate a flag against.
 type User struct {
 	userID            string
 	realUserID        string
 	customerAccountID string
 
 	ldUser lduser.User
+}
+
+func (u User) ToLDUser() lduser.User {
+	return u.ldUser
 }
 
 // UserOption are functions that can be supplied to configure a new user with
@@ -48,9 +53,18 @@ func WithRealUserID(id string) UserOption {
 // NewAnonymousUser returns a user object suitable for use in unauthenticated
 // requests or requests with no access to user identifiers.
 func NewAnonymousUser() User {
-	return User{
-		ldUser: lduser.NewAnonymousUser(anonymousUser),
+	u := User{
+		userID: anonymousUser,
 	}
+
+	userBuilder := lduser.NewUserBuilder(u.userID)
+	userBuilder.Custom(
+		attributeEntityType,
+		ldvalue.String("user"))
+	userBuilder.Anonymous(true)
+	u.ldUser = userBuilder.Build()
+
+	return u
 }
 
 // NewUser returns a new user object with the given user ID and options.
@@ -65,7 +79,10 @@ func NewUser(userID string, opts ...UserOption) User {
 		opt(u)
 	}
 
-	userBuilder := lduser.NewUserBuilder(userID)
+	userBuilder := lduser.NewUserBuilder(u.userID)
+	userBuilder.Custom(
+		attributeEntityType,
+		ldvalue.String("user"))
 	userBuilder.Custom(
 		userAttributeCustomerAccountID,
 		ldvalue.String(u.customerAccountID))

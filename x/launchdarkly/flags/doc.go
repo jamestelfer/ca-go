@@ -38,20 +38,26 @@
 //	   // client not configured or connected
 //	 }
 //
-// Query a flag by supplying the request context, the flag name, and fallback value
-// to be used if an error occurs. The fallback value will always be reflected as
-// the value of the flag if err is not nil. The SDK will attempt to extract request
-// fields and the authenticated user from the context.
+// A typical query takes three pieces of data:
+// 1) The flag name (the "key" within the LaunchDarkly UI).
+// 2) The evaluation context, currently limited to a User object. This context
+//    contains the identifiers and attributes that flags are configured to target
+//    against.
+// 3) The fallback value to return if an evaluation error occurs. This value will
+//    always be reflected as the value of the flag if err is not nil.
+//
+// In most cases, the client can automatically extract the User from the request
+// context:
 //   val, err := client.QueryBool(ctx, "my-flag", false)
 //
-// You can also supply your own user object instead of a context:
+// You can also supply your own User as an evaluation context:
 //   user := flags.NewUser(
 //			   "user-id",
 //			   flags.WithCustomerAccountID("account-id"),
 //	 )
 //   // user := flags.AnonymousUser() // if unauthenticated
 //
-//   val, err := client.QueryBoolWithUser("my-flag", user, false)
+//   val, err := client.QueryBoolWithEvaluationContext("my-flag", user, false)
 //
 // When your application is shutting down, you should call Shutdown() to gracefully
 // close connections to LaunchDarkly:

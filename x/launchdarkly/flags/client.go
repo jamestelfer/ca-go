@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/cultureamp/ca-go/x/launchdarkly/flags/evaluationcontext"
 	ld "gopkg.in/launchdarkly/go-server-sdk.v5"
 )
 
@@ -72,57 +73,57 @@ func (c *Client) Connect() error {
 // extracted from the context. The supplied fallback value is always reflected in
 // the returned value regardless of whether an error occurs.
 func (c *Client) QueryBool(ctx context.Context, key FlagName, fallbackValue bool) (bool, error) {
-	user, err := UserFromContext(ctx)
+	user, err := evaluationcontext.UserFromContext(ctx)
 	if err != nil {
 		return fallbackValue, fmt.Errorf("get user from context: %w", err)
 	}
 
-	return c.wrappedClient.BoolVariation(string(key), user.ldUser, fallbackValue)
+	return c.wrappedClient.BoolVariation(string(key), user.ToLDUser(), fallbackValue)
 }
 
-// QueryBoolWithUser retrieves the value of a boolean flag. A User object must
-// be supplied manually. The supplied fallback value is always reflected in the
+// QueryBoolWithEvaluationContext retrieves the value of a boolean flag. An evaluation context
+// must be supplied manually. The supplied fallback value is always reflected in the
 // returned value regardless of whether an error occurs.
-func (c *Client) QueryBoolWithUser(key FlagName, user User, fallbackValue bool) (bool, error) {
-	return c.wrappedClient.BoolVariation(string(key), user.ldUser, fallbackValue)
+func (c *Client) QueryBoolWithEvaluationContext(key FlagName, evalContext evaluationcontext.Context, fallbackValue bool) (bool, error) {
+	return c.wrappedClient.BoolVariation(string(key), evalContext.ToLDUser(), fallbackValue)
 }
 
 // QueryString retrieves the value of a string flag. User attributes are
 // extracted from the context. The supplied fallback value is always reflected in
 // the returned value regardless of whether an error occurs.
 func (c *Client) QueryString(ctx context.Context, key FlagName, fallbackValue string) (string, error) {
-	user, err := UserFromContext(ctx)
+	user, err := evaluationcontext.UserFromContext(ctx)
 	if err != nil {
 		return fallbackValue, fmt.Errorf("get user from context: %w", err)
 	}
 
-	return c.wrappedClient.StringVariation(string(key), user.ldUser, fallbackValue)
+	return c.wrappedClient.StringVariation(string(key), user.ToLDUser(), fallbackValue)
 }
 
-// QueryStringWithUser retrieves the value of a string flag. A User object must
-// be supplied manually. The supplied fallback value is always reflected in the
+// QueryStringWithEvaluationContext retrieves the value of a string flag. An evaluation context
+// must be supplied manually. The supplied fallback value is always reflected in the
 // returned value regardless of whether an error occurs.
-func (c *Client) QueryStringWithUser(key FlagName, user User, fallbackValue string) (string, error) {
-	return c.wrappedClient.StringVariation(string(key), user.ldUser, fallbackValue)
+func (c *Client) QueryStringWithEvaluationContext(key FlagName, evalContext evaluationcontext.Context, fallbackValue string) (string, error) {
+	return c.wrappedClient.StringVariation(string(key), evalContext.ToLDUser(), fallbackValue)
 }
 
 // QueryInt retrieves the value of an integer flag. User attributes are
 // extracted from the context. The supplied fallback value is always reflected in
 // the returned value regardless of whether an error occurs.
 func (c *Client) QueryInt(ctx context.Context, key FlagName, fallbackValue int) (int, error) {
-	user, err := UserFromContext(ctx)
+	user, err := evaluationcontext.UserFromContext(ctx)
 	if err != nil {
 		return fallbackValue, fmt.Errorf("get user from context: %w", err)
 	}
 
-	return c.wrappedClient.IntVariation(string(key), user.ldUser, fallbackValue)
+	return c.wrappedClient.IntVariation(string(key), user.ToLDUser(), fallbackValue)
 }
 
-// QueryIntWithUser retrieves the value of an integer flag. A User object must
-// be supplied manually. The supplied fallback value is always reflected in the
+// QueryIntWithEvaluationContext retrieves the value of an integer flag. An evaluation context
+// must be supplied manually. The supplied fallback value is always reflected in the
 // returned value regardless of whether an error occurs.
-func (c *Client) QueryIntWithUser(key FlagName, user User, fallbackValue int) (int, error) {
-	return c.wrappedClient.IntVariation(string(key), user.ldUser, fallbackValue)
+func (c *Client) QueryIntWithEvaluationContext(key FlagName, evalContext evaluationcontext.Context, fallbackValue int) (int, error) {
+	return c.wrappedClient.IntVariation(string(key), evalContext.ToLDUser(), fallbackValue)
 }
 
 // RawClient returns the wrapped LaunchDarkly client. The return value should be
