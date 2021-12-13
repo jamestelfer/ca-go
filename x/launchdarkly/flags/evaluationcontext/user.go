@@ -9,10 +9,10 @@ import (
 	"gopkg.in/launchdarkly/go-sdk-common.v2/ldvalue"
 )
 
-const (
-	anonymousUser                  = "ANONYMOUS_USER"
-	userAttributeCustomerAccountID = "customerAccountID"
-	userAttributeRealUserID        = "realUserID"
+var (
+	anonymousUser                  = prefixEntity(entityUser, "ANONYMOUS_USER")
+	userAttributeCustomerAccountID = prefixEntity(entityUser, "customerAccountID")
+	userAttributeRealUserID        = prefixEntity(entityUser, "realUserID")
 )
 
 // User is a type of evaluation context, representing the current active
@@ -38,7 +38,7 @@ type UserOption func(*User)
 // sometimes known as the "account_aggregate_id".
 func WithCustomerAccountID(id string) UserOption {
 	return func(u *User) {
-		u.customerAccountID = id
+		u.customerAccountID = prefixEntity(entityUser, id)
 	}
 }
 
@@ -46,7 +46,7 @@ func WithCustomerAccountID(id string) UserOption {
 // This is the ID of the user who is currently impersonating the current user.
 func WithRealUserID(id string) UserOption {
 	return func(u *User) {
-		u.realUserID = id
+		u.realUserID = prefixEntity(entityUser, id)
 	}
 }
 
@@ -63,14 +63,14 @@ func NewAnonymousUser() User {
 // be a "user_aggregate_id".
 func NewUser(userID string, opts ...UserOption) User {
 	u := &User{
-		userID: userID,
+		userID: prefixEntity(entityUser, userID),
 	}
 
 	for _, opt := range opts {
 		opt(u)
 	}
 
-	userBuilder := lduser.NewUserBuilder(userID)
+	userBuilder := lduser.NewUserBuilder(u.userID)
 	userBuilder.Custom(
 		userAttributeCustomerAccountID,
 		ldvalue.String(u.customerAccountID))
