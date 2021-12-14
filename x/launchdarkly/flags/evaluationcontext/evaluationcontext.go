@@ -9,14 +9,15 @@ import (
 type entity string
 
 const (
-	entityUser   entity = "user"
-	entitySurvey entity = "survey"
+	entityUser entity = "user"
 )
+
+const attributeEntityType = "entityType"
 
 type Context interface {
 	ToLDUser() lduser.User
 }
 
 func prefixEntity(entity entity, key string) string {
-	return fmt.Sprintf("%s_%s", entity, key)
+	return fmt.Sprintf("%s.%s", entity, key)
 }

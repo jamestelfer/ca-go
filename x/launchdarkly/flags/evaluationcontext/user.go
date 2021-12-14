@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	anonymousUser                  = prefixEntity(entityUser, "ANONYMOUS_USER")
+	anonymousUser                  = "ANONYMOUS_USER"
 	userAttributeCustomerAccountID = prefixEntity(entityUser, "customerAccountID")
 	userAttributeRealUserID        = prefixEntity(entityUser, "realUserID")
 )
@@ -63,7 +63,7 @@ func NewAnonymousUser() User {
 // be a "user_aggregate_id".
 func NewUser(userID string, opts ...UserOption) User {
 	u := &User{
-		userID: prefixEntity(entityUser, userID),
+		userID: userID,
 	}
 
 	for _, opt := range opts {
@@ -71,6 +71,9 @@ func NewUser(userID string, opts ...UserOption) User {
 	}
 
 	userBuilder := lduser.NewUserBuilder(u.userID)
+	userBuilder.Custom(
+		attributeEntityType,
+		ldvalue.String(string(entityUser)))
 	userBuilder.Custom(
 		userAttributeCustomerAccountID,
 		ldvalue.String(u.customerAccountID))
