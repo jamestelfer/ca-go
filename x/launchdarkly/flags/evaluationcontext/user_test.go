@@ -13,8 +13,13 @@ import (
 
 func TestNewUser(t *testing.T) {
 	t.Run("can create an anonymous user", func(t *testing.T) {
-		user := evaluationcontext.NewAnonymousUser()
+		user := evaluationcontext.NewAnonymousUser("")
 		assertUserAttributes(t, user, "ANONYMOUS_USER", "", "")
+	})
+
+	t.Run("can create an anonymous user with session/request key", func(t *testing.T) {
+		user := evaluationcontext.NewAnonymousUser("my-request-id")
+		assertUserAttributes(t, user, "my-request-id", "", "")
 	})
 
 	t.Run("can create an identified user", func(t *testing.T) {

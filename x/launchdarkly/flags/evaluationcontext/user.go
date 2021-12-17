@@ -52,9 +52,16 @@ func WithRealUserID(id string) UserOption {
 
 // NewAnonymousUser returns a user object suitable for use in unauthenticated
 // requests or requests with no access to user identifiers.
-func NewAnonymousUser() User {
+// Provide a unique session or request identifier as the key if possible. If the
+// key is empty, it will default to 'ANONYMOUS_USER' and percentage rollouts
+// will not be supported.
+func NewAnonymousUser(key string) User {
+	if key == "" {
+		key = anonymousUser
+	}
+
 	u := User{
-		userID: anonymousUser,
+		userID: key,
 	}
 
 	userBuilder := lduser.NewUserBuilder(u.userID)
