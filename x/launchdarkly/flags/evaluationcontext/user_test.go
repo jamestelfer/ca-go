@@ -28,7 +28,7 @@ func TestNewUser(t *testing.T) {
 
 		user = evaluationcontext.NewUser(
 			"not-a-uuid",
-			evaluationcontext.WithCustomerAccountID("not-a-uuid"),
+			evaluationcontext.WithAccountID("not-a-uuid"),
 			evaluationcontext.WithRealUserID("not-a-uuid"))
 		assertUserAttributes(t, user, "not-a-uuid", "not-a-uuid", "not-a-uuid")
 	})
@@ -57,6 +57,6 @@ func assertUserAttributes(t *testing.T, user evaluationcontext.User, effectiveUs
 
 	assert.Equal(t, effectiveUserAggregateID, ldUser.GetKey())
 	assert.Equal(t, realUserAggregateID, ldUser.GetAttribute("user.realUserID").StringValue())
-	assert.Equal(t, accountAggregateID, ldUser.GetAttribute("user.customerAccountID").StringValue())
+	assert.Equal(t, accountAggregateID, ldUser.GetAttribute("user.accountID").StringValue())
 	assert.Equal(t, "user", ldUser.GetAttribute("entityType").StringValue())
 }

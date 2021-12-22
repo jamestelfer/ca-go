@@ -53,7 +53,7 @@
 // You can also supply your own User as an evaluation context:
 //   user := flags.NewUser(
 //			   "user-id",
-//			   flags.WithCustomerAccountID("account-id"),
+//			   flags.WithAccountID("account-id"),
 //	 )
 //   // user := flags.AnonymousUser() // if unauthenticated
 //

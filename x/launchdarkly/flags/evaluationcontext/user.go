@@ -10,17 +10,17 @@ import (
 )
 
 var (
-	anonymousUser                  = "ANONYMOUS_USER"
-	userAttributeCustomerAccountID = "user.customerAccountID"
-	userAttributeRealUserID        = "user.realUserID"
+	anonymousUser           = "ANONYMOUS_USER"
+	userAttributeAccountID  = "user.accountID"
+	userAttributeRealUserID = "user.realUserID"
 )
 
 // User is a type of context, representing the identifiers and attributes of
 // a human user to evaluate a flag against.
 type User struct {
-	userID            string
-	realUserID        string
-	customerAccountID string
+	userID     string
+	realUserID string
+	accountID  string
 
 	ldUser lduser.User
 }
@@ -33,12 +33,12 @@ func (u User) ToLDUser() lduser.User {
 // additional attributes.
 type UserOption func(*User)
 
-// WithCustomerAccountID configures the user with the given account ID.
+// WithAccountID configures the user with the given account ID.
 // This is the ID of the currently logged in user's parent account/organization,
 // sometimes known as the "account_aggregate_id".
-func WithCustomerAccountID(id string) UserOption {
+func WithAccountID(id string) UserOption {
 	return func(u *User) {
-		u.customerAccountID = id
+		u.accountID = id
 	}
 }
 
@@ -91,8 +91,8 @@ func NewUser(userID string, opts ...UserOption) User {
 		attributeEntityType,
 		ldvalue.String("user"))
 	userBuilder.Custom(
-		userAttributeCustomerAccountID,
-		ldvalue.String(u.customerAccountID))
+		userAttributeAccountID,
+		ldvalue.String(u.accountID))
 	userBuilder.Custom(
 		userAttributeRealUserID,
 		ldvalue.String(u.realUserID))
@@ -119,6 +119,6 @@ func UserFromContext(ctx context.Context) (User, error) {
 
 	return NewUser(
 		authenticatedUser.UserID,
-		WithCustomerAccountID(authenticatedUser.CustomerAccountID),
+		WithAccountID(authenticatedUser.CustomerAccountID),
 		WithRealUserID(authenticatedUser.RealUserID)), nil
 }
