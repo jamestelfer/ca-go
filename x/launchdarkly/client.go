@@ -1,4 +1,4 @@
-package flags
+package launchdarkly
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/cultureamp/ca-go/x/launchdarkly/flags/evaluationcontext"
+	"github.com/cultureamp/ca-go/x/launchdarkly/evaluationcontext"
 	ld "gopkg.in/launchdarkly/go-server-sdk.v5"
 )
 

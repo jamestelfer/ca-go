@@ -1,6 +1,8 @@
-// Package flags provides access to feature flags. It wraps the LaunchDarkly SDK
-// to expose a convenient and consistent way of configuring and using the
+// Package launchdarkly provides access to feature flags. It wraps the LaunchDarkly
+// SDK to expose a convenient and consistent way of configuring and using the
 // client.
+//
+//   import flags "github.com/cultureamp/ca-go/launchdarkly"
 //
 // The client can be configured and used as a managed singleton or as an
 // instance returned from a constructor function. The managed singleton provides
@@ -62,4 +64,4 @@
 // When your application is shutting down, you should call Shutdown() to gracefully
 // close connections to LaunchDarkly:
 //   client.Shutdown()
-package flags
+package launchdarkly
