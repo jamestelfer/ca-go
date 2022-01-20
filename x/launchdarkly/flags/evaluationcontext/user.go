@@ -11,14 +11,14 @@ import (
 
 var (
 	anonymousUser           = "ANONYMOUS_USER"
-	userAttributeAccountID  = "user.accountID"
-	userAttributeRealUserID = "user.realUserID"
+	userAttributeAccountID  = "accountID"
+	userAttributeRealUserID = "realUserID"
 )
 
 // User is a type of context, representing the identifiers and attributes of
 // a human user to evaluate a flag against.
 type User struct {
-	userID     string
+	key        string
 	realUserID string
 	accountID  string
 
@@ -61,13 +61,10 @@ func NewAnonymousUser(key string) User {
 	}
 
 	u := User{
-		userID: key,
+		key: ldKey("anonymousUser", key),
 	}
 
-	userBuilder := lduser.NewUserBuilder(u.userID)
-	userBuilder.Custom(
-		attributeEntityType,
-		ldvalue.String("user"))
+	userBuilder := lduser.NewUserBuilder(u.key)
 	userBuilder.Anonymous(true)
 	u.ldUser = userBuilder.Build()
 
@@ -79,17 +76,14 @@ func NewAnonymousUser(key string) User {
 // be a "user_aggregate_id".
 func NewUser(userID string, opts ...UserOption) User {
 	u := &User{
-		userID: userID,
+		key: ldKey("user", userID),
 	}
 
 	for _, opt := range opts {
 		opt(u)
 	}
 
-	userBuilder := lduser.NewUserBuilder(u.userID)
-	userBuilder.Custom(
-		attributeEntityType,
-		ldvalue.String("user"))
+	userBuilder := lduser.NewUserBuilder(u.key)
 	userBuilder.Custom(
 		userAttributeAccountID,
 		ldvalue.String(u.accountID))
