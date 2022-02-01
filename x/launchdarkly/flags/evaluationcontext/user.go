@@ -16,7 +16,7 @@ var (
 	userEntityPrefix        = "user"
 )
 
-// User is a type of context, representing the identifiers and attributes of
+// User is a type of FlagContext, representing the identifiers and attributes of
 // a human user to evaluate a flag against.
 type User struct {
 	key        string

@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	flagContextKind = "flag"
+	flagContextKind   = "flag"
+	toggleContextKind = "toggle"
 )
 
 // FlagContext represents a set of attributes which a flag is evaluated against. The
@@ -16,6 +17,12 @@ type FlagContext interface {
 	// ToLDFlagUser transforms the context implementation into an LDUser object that can
 	// be understood by LaunchDarkly when evaluating a flag.
 	ToLDFlagUser() lduser.User
+}
+
+// ToggleContext represents a set of attributes which a product toggle is evaluated
+// against. The only context supported now is Account.
+type ToggleContext interface {
+	ToLDToggleUser() lduser.User
 }
 
 // ldKey returns a formatted string to be used as the `key` value of the lduser.User
