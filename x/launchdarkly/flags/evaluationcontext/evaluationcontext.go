@@ -6,14 +6,24 @@ import (
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 )
 
-// Context represents a set of attributes which a flag is evaluated against. The
+const (
+	flagContextKind = "flag"
+)
+
+// FlagContext represents a set of attributes which a flag is evaluated against. The
 // only context supported now is User.
-type Context interface {
-	// ToLDUser transforms the context implementation into an LDUser object that can
+type FlagContext interface {
+	// ToLDFlagUser transforms the context implementation into an LDUser object that can
 	// be understood by LaunchDarkly when evaluating a flag.
-	ToLDUser() lduser.User
+	ToLDFlagUser() lduser.User
 }
 
-func ldKey(prefix, key string) string {
-	return fmt.Sprintf("%s.%s", prefix, key)
+// ldKey returns a formatted string to be used as the `key` value of the lduser.User
+// sent to LaunchDarkly. The key is comprised of three components:
+// 	1. The kind of evaluation context the key belongs to. A `flag` or `toggle`.
+// 	2. The entity prefix, for example `user` or `account`.
+//	3. The unique identifier for the entity, e.g. a user ID for the User evaluation
+//     context.
+func ldKey(contextType, prefix, key string) string {
+	return fmt.Sprintf("%s.%s.%s", contextType, prefix, key)
 }

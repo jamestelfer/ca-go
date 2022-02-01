@@ -13,6 +13,7 @@ var (
 	anonymousUser           = "ANONYMOUS_USER"
 	userAttributeAccountID  = "accountID"
 	userAttributeRealUserID = "realUserID"
+	userEntityPrefix        = "user"
 )
 
 // User is a type of context, representing the identifiers and attributes of
@@ -25,7 +26,7 @@ type User struct {
 	ldUser lduser.User
 }
 
-func (u User) ToLDUser() lduser.User {
+func (u User) ToLDFlagUser() lduser.User {
 	return u.ldUser
 }
 
@@ -61,7 +62,7 @@ func NewAnonymousUser(key string) User {
 	}
 
 	u := User{
-		key: ldKey("anonymousUser", key),
+		key: ldKey(flagContextKind, userEntityPrefix, key),
 	}
 
 	userBuilder := lduser.NewUserBuilder(u.key)
@@ -76,7 +77,7 @@ func NewAnonymousUser(key string) User {
 // be a "user_aggregate_id".
 func NewUser(userID string, opts ...UserOption) User {
 	u := &User{
-		key: ldKey("user", userID),
+		key: ldKey(flagContextKind, userEntityPrefix, userID),
 	}
 
 	for _, opt := range opts {
