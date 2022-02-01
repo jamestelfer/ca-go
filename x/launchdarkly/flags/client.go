@@ -126,6 +126,25 @@ func (c *Client) QueryIntWithEvaluationContext(key FlagName, evalContext evaluat
 	return c.wrappedClient.IntVariation(string(key), evalContext.ToLDFlagUser(), fallbackValue)
 }
 
+// QueryToggle retrieves the value of a boolean product toggle. The account is
+// extracted from the context. The supplied fallback value is always reflected in
+// the returned value regardless of whether an error occurs.
+func (c *Client) QueryToggle(ctx context.Context, key FlagName, fallbackValue bool) (bool, error) {
+	user, err := evaluationcontext.AccountFromContext(ctx)
+	if err != nil {
+		return fallbackValue, fmt.Errorf("get account from context: %w", err)
+	}
+
+	return c.wrappedClient.BoolVariation(string(key), user.ToLDToggleUser(), fallbackValue)
+}
+
+// QueryToggleWithEvaluationContext retrieves the value of a boolean product toggle. An
+// evaluation context must be supplied manually. The supplied fallback value is always
+// reflected in the returned value regardless of whether an error occurs.
+func (c *Client) QueryToggleWithEvaluationContext(key FlagName, evalContext evaluationcontext.ToggleContext, fallbackValue bool) (bool, error) {
+	return c.wrappedClient.BoolVariation(string(key), evalContext.ToLDToggleUser(), fallbackValue)
+}
+
 // RawClient returns the wrapped LaunchDarkly client. The return value should be
 // casted to an *ld.LDClient instance.
 func (c *Client) RawClient() interface{} {
