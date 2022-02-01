@@ -12,8 +12,7 @@ const (
 	accountEntityPrefix = "account"
 )
 
-// Account is a type of ToggleContext, representing the identifier of a customer
-// account to evaluate a toggle against.
+// Account is an evaluation context used for toggles.
 type Account struct {
 	key string
 
@@ -24,9 +23,10 @@ func (a Account) ToLDToggleUser() lduser.User {
 	return a.ldUser
 }
 
-// NewAccount returns a new account object with the given account ID.
-// accountID is the ID of a customer account, and will generally
-// be an "account_aggregate_id".
+// NewAccount returns an evaluation context representing a customer account.
+// accountID is the ID of a customer account, and will generally be an
+// "account_aggregate_id".
+// This is used for toggles only.
 func NewAccount(accountID string) Account {
 	a := &Account{
 		key: ldKey(toggleContextKind, accountEntityPrefix, accountID),

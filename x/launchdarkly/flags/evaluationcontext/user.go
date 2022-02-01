@@ -16,8 +16,7 @@ var (
 	userEntityPrefix        = "user"
 )
 
-// User is a type of FlagContext, representing the identifiers and attributes of
-// a human user to evaluate a flag against.
+// User is an evaluation context used for flags.
 type User struct {
 	key        string
 	realUserID string
@@ -51,8 +50,8 @@ func WithRealUserID(id string) UserOption {
 	}
 }
 
-// NewAnonymousUser returns a user object suitable for use in unauthenticated
-// requests or requests with no access to user identifiers.
+// NewAnonymousUser returns an evaluation context representing an
+// unauthenticated user.
 // Provide a unique session or request identifier as the key if possible. If the
 // key is empty, it will default to 'ANONYMOUS_USER' and percentage rollouts
 // will not be supported.
@@ -72,9 +71,10 @@ func NewAnonymousUser(key string) User {
 	return u
 }
 
-// NewUser returns a new user object with the given user ID and options.
+// NewUser returns an evaluation context representing an authenticated user.
 // userID is the ID of the currently authenticated user, and will generally
 // be a "user_aggregate_id".
+// This is used for flags only.
 func NewUser(userID string, opts ...UserOption) User {
 	u := &User{
 		key: ldKey(flagContextKind, userEntityPrefix, userID),
