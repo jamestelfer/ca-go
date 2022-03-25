@@ -13,21 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupSentry(t *testing.T) *transportMock {
-	t.Helper()
-
-	mockSentryTransport := &transportMock{}
-	err := errorreport.Init(
-		errorreport.WithEnvironment("test"),
-		errorreport.WithDSN("https://public@sentry.example.com/1"),
-		errorreport.WithRelease("my-app", "1.0.0"),
-		errorreport.WithTransport(mockSentryTransport),
-	)
-	require.NoError(t, err)
-
-	return mockSentryTransport
-}
-
 // setupContextForSentry returns a new context populated with sample
 // request and user IDs, along with an assertion function. The function
 // can be called by tests to check that the request and user IDs have
@@ -72,7 +57,7 @@ func TestHTTPMiddleware(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("successful request", func(t *testing.T) {
-		mockSentryTransport := setupSentry(t)
+		mockSentryTransport := setupMockSentryTransport(t)
 		w := httptest.NewRecorder()
 
 		panicHandlerCalled := false
@@ -95,7 +80,7 @@ func TestHTTPMiddleware(t *testing.T) {
 	})
 
 	t.Run("unsuccessful request", func(t *testing.T) {
-		mockSentryTransport := setupSentry(t)
+		mockSentryTransport := setupMockSentryTransport(t)
 		w := httptest.NewRecorder()
 
 		panicHandlerCalled := false
@@ -118,7 +103,7 @@ func TestHTTPMiddleware(t *testing.T) {
 		assert.True(t, innerHandlerCalled)
 
 		// ...recovers the panic...
-		// nolint:bodyclose
+
 		assert.Equal(t, http.StatusTeapot, w.Result().StatusCode)
 
 		// ...and reports the error to Sentry.
@@ -126,7 +111,7 @@ func TestHTTPMiddleware(t *testing.T) {
 	})
 
 	t.Run("unsuccessful request with default panic handler", func(t *testing.T) {
-		mockSentryTransport := setupSentry(t)
+		mockSentryTransport := setupMockSentryTransport(t)
 		w := httptest.NewRecorder()
 
 		mw := errorreport.NewHTTPMiddleware(nil)
@@ -148,7 +133,6 @@ func TestHTTPMiddleware(t *testing.T) {
 
 		// ...and produces a JSON:API style error response.
 		assert.Equal(t, "{\"errors\":[{\"status\":\"500\",\"title\":\"Internal Server Error\"}]}", w.Body.String())
-		// nolint:bodyclose
 		assert.Equal(t, http.StatusInternalServerError, w.Result().StatusCode)
 		assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
 	})
@@ -158,7 +142,7 @@ func TestGoaEndpointMiddleware(t *testing.T) {
 	ctx, sentryContextAssertion := setupContextForSentry()
 
 	t.Run("successful request", func(t *testing.T) {
-		mockSentryTransport := setupSentry(t)
+		mockSentryTransport := setupMockSentryTransport(t)
 
 		endpointCalled := false
 		endpoint := func(ctx context.Context, req interface{}) (interface{}, error) {
@@ -179,7 +163,7 @@ func TestGoaEndpointMiddleware(t *testing.T) {
 	})
 
 	t.Run("unsuccessful request", func(t *testing.T) {
-		mockSentryTransport := setupSentry(t)
+		mockSentryTransport := setupMockSentryTransport(t)
 
 		endpointCalled := false
 		endpoint := func(ctx context.Context, req interface{}) (interface{}, error) {

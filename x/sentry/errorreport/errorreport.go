@@ -81,6 +81,17 @@ func ReportError(ctx context.Context, err error) {
 	sentry.CaptureException(err)
 }
 
+// Decorate creates a new Sentry scope and adds the supplied tags. This allows
+// for any errors that are generated in this scope to have additional
+// information added to them. For example, this is useful when processing
+// multiple event records in a batch. The return value is a function that should
+// be passed to `defer` so the created scope is automatically popped.
+func Decorate(tags map[string]string) func() {
+	scope := sentry.CurrentHub().PushScope()
+	scope.SetTags(tags)
+	return sentry.PopScope
+}
+
 func addRequestFieldsToScope(ctx context.Context, scope *sentry.Scope) {
 	if authenticatedUser, ok := request.AuthenticatedUserFromContext(ctx); ok {
 		scope.SetUser(sentry.User{

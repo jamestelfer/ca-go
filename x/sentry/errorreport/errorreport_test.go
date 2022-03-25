@@ -1,38 +1,49 @@
 package errorreport_test
 
 import (
-	"sync"
+	"context"
+	"errors"
 	"testing"
-	"time"
 
 	"github.com/cultureamp/ca-go/x/sentry/errorreport"
 	"github.com/getsentry/sentry-go"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// From https://github.com/getsentry/sentry-go/blob/bd116d6ce79b604297c6497aa07d7ac01768adbb/mocks_test.go#L24-L44
-type transportMock struct {
-	mu        sync.Mutex
-	events    []*sentry.Event
-	lastEvent *sentry.Event
+func ExampleDecorate() {
+	defer errorreport.Decorate(map[string]string{
+		"key":    "123",
+		"animal": "flamingo",
+	})()
+
+	// Since this API is designed around "defer", don't use it in a loop.
+	// Instead, create a function and call that function in a loop.
 }
 
-func (t *transportMock) Configure(options sentry.ClientOptions) {}
-func (t *transportMock) SendEvent(event *sentry.Event) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	t.events = append(t.events, event)
-	t.lastEvent = event
-}
+func TestDecorate(t *testing.T) {
+	ctx := context.Background()
+	mockSentryTransport := setupMockSentryTransport(t)
 
-func (t *transportMock) Flush(timeout time.Duration) bool {
-	return true
-}
+	// record event with tag value in context
+	popFn := errorreport.Decorate(map[string]string{
+		"animal": "flamingo",
+	})
+	errorreport.ReportError(ctx, errors.New("with a flamingo"))
 
-func (t *transportMock) Events() []*sentry.Event {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	return t.events
+	// pop tagging context
+	popFn()
+
+	// report event without a tag value in context
+	errorreport.ReportError(ctx, errors.New("i have no flamingo"))
+
+	require.Len(t, mockSentryTransport.events, 2)
+
+	eventWithTag := mockSentryTransport.events[0]
+	assert.Equal(t, "flamingo", eventWithTag.Tags["animal"])
+
+	eventNoTag := mockSentryTransport.events[1]
+	assert.Equal(t, "", eventNoTag.Tags["animal"])
 }
 
 func TestConfigure(t *testing.T) {
