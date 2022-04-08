@@ -121,7 +121,7 @@ func WithDynamoBaseURL(baseURL *url.URL) ConfigOption {
 
 func configForProxyMode(cfg *proxyModeConfig) ld.Config {
 	return ld.Config{
-		ServiceEndpoints: ldcomponents.RelayProxyEndpoints(cfg.relayProxyURL),
+		ServiceEndpoints: ldcomponents.RelayProxyEndpointsWithoutEvents(cfg.relayProxyURL),
 	}
 }
 
