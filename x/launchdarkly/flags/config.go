@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/url"
 	"os"
 	"time"
 
@@ -16,58 +15,33 @@ import (
 
 var errClientNotConfigured = errors.New("client not configured")
 
+const configurationEnvVar = "LAUNCHDARKLY_CONFIGURATION"
+
+// proxyModeConfig declares the structure of the Proxy Option in configurationJSON
 type proxyModeConfig struct {
-	relayProxyURL string
+	RelayProxyURL string `json:"url"`
 }
 
+// daemonModeConfig declares the structure of the DaemonMode Option in configurationJSON
 type daemonModeConfig struct {
-	dynamoTableName string
-	dynamoBaseURL   string
-	cacheTTL        time.Duration
+	DynamoTableName string `json:"DynamoTableName"`
+	DynamoBaseURL   string `json:"DynamoBaseUrl"`
+	CacheTTLSeconds int64  `json:"dynamoCacheTTLSeconds"`
 }
 
-// configurationJSON is the structure of the LAUNCHDARKLY_CONFIGURATION
+// configurationJSON declares the structure of the LAUNCHDARKLY_CONFIGURATION
 // environment variable.
 type configurationJSON struct {
-	SDKKey string `json:"sdkKey"`
+	SDKKey  string `json:"sdkKey"`
+	Options struct {
+		DaemonMode *daemonModeConfig `json:"daemonMode"`
+		Proxy      *proxyModeConfig  `json:"proxyMode"`
+	} `json:"options"`
 }
 
 // ConfigOption are functions that can be supplied to Configure and NewClient to
 // configure the flags client.
 type ConfigOption func(c *Client)
-
-// FromEnvironment configures the client automatically based on the value of the
-// LAUNCHDARKLY_CONFIGURATION environment variable. You should declare this
-// variable in your CDK configuration for your infrastructure. The correct value
-// can be retrieved from the AWS Secrets Manager under the key
-// `/common/launchdarkly-ops/sdk-configuration/<farm>`.
-//
-// This option panics if LAUNCHDARKLY_CONFIGURATION could not be found or
-// parsed.
-func FromEnvironment() ConfigOption {
-	var parsedConfig configurationJSON
-
-	configEnvVar, ok := os.LookupEnv("LAUNCHDARKLY_CONFIGURATION")
-	if !ok {
-		panic(errors.New("environment variable LAUNCHDARKLY_CONFIGURATION does not exist"))
-	}
-
-	if err := json.Unmarshal([]byte(configEnvVar), &parsedConfig); err != nil {
-		panic(fmt.Errorf("parse LAUNCHDARKLY_CONFIGURATION: %w", err))
-	}
-
-	return func(c *Client) {
-		c.sdkKey = parsedConfig.SDKKey
-	}
-}
-
-// WithSDKKey configures the client to use the given SDK key to authenticate
-// against LaunchDarkly.
-func WithSDKKey(key string) ConfigOption {
-	return func(c *Client) {
-		c.sdkKey = key
-	}
-}
 
 // WithInitWait configures the client to wait for the given duration for the
 // LaunchDarkly client to connect.
@@ -79,63 +53,48 @@ func WithInitWait(t time.Duration) ConfigOption {
 	}
 }
 
-// WithProxyMode configures the client to establish a connection to LaunchDarkly
-// via a Relay Proxy.
-func WithProxyMode(proxyURL *url.URL) ConfigOption {
+// WithLambdaMode configures the client to connect to Dynamo for feature flags
+func WithLambdaMode() ConfigOption {
 	return func(c *Client) {
-		c.proxyModeConfig = &proxyModeConfig{
-			relayProxyURL: proxyURL.String(),
-		}
+		c.mode = modeLambda
 	}
 }
 
-// WithDaemonMode configures the client to source flag data from a DynamoDB
-// table, bypassing a direct connection to LaunchDarkly completely.
-func WithDaemonMode(dynamoTableName string, cacheTTL time.Duration) ConfigOption {
-	return func(c *Client) {
-		if c.daemonModeConfig == nil {
-			c.daemonModeConfig = &daemonModeConfig{}
-		}
-
-		c.daemonModeConfig = &daemonModeConfig{
-			dynamoTableName: dynamoTableName,
-			cacheTTL:        cacheTTL,
-		}
+func configFromEnvironment() (parsedConfig configurationJSON, err error) {
+	configEnvVar, ok := os.LookupEnv(configurationEnvVar)
+	if !ok {
+		return parsedConfig, fmt.Errorf("the %s environment variable was not found", configurationEnvVar)
 	}
-}
 
-// WithDynamoBaseURL configures the client to use the given base URL for
-// DyanmoDB, overriding any AWS configuration implicit in the environment.
-//
-// This will typically only be used in local development or testing, where you
-// might supply the URL of a local DynamoDB instance.
-func WithDynamoBaseURL(baseURL *url.URL) ConfigOption {
-	return func(c *Client) {
-		if c.daemonModeConfig == nil {
-			c.daemonModeConfig = &daemonModeConfig{}
-		}
-
-		c.daemonModeConfig.dynamoBaseURL = baseURL.String()
+	if err := json.Unmarshal([]byte(configEnvVar), &parsedConfig); err != nil {
+		return parsedConfig, fmt.Errorf("parse %s: %w", configurationEnvVar, err)
 	}
+
+	// At a minimum the JSON should have an SDK key.
+	if parsedConfig.SDKKey == "" {
+		return parsedConfig, fmt.Errorf("%s did not contain an SDK key", configurationEnvVar)
+	}
+
+	return parsedConfig, nil
 }
 
 func configForProxyMode(cfg *proxyModeConfig) ld.Config {
 	return ld.Config{
-		ServiceEndpoints: ldcomponents.RelayProxyEndpoints(cfg.relayProxyURL),
+		ServiceEndpoints: ldcomponents.RelayProxyEndpoints(cfg.RelayProxyURL),
 	}
 }
 
-func configForDaemonMode(cfg *daemonModeConfig) ld.Config {
-	datastoreBuilder := lddynamodb.DataStore(cfg.dynamoTableName)
+func configForLambdaMode(cfg *daemonModeConfig) ld.Config {
+	datastoreBuilder := lddynamodb.DataStore(cfg.DynamoTableName)
 
-	if cfg.dynamoBaseURL != "" {
-		datastoreBuilder.ClientConfig(aws.NewConfig().WithEndpoint(cfg.dynamoBaseURL))
+	if cfg.DynamoBaseURL != "" {
+		datastoreBuilder.ClientConfig(aws.NewConfig().WithEndpoint(cfg.DynamoBaseURL))
 	}
 
 	return ld.Config{
 		DataSource: ldcomponents.ExternalUpdatesOnly(),
 		DataStore: ldcomponents.PersistentDataStore(
 			datastoreBuilder,
-		).CacheTime(cfg.cacheTTL),
+		).CacheTime(time.Duration(cfg.CacheTTLSeconds) * time.Second),
 	}
 }
