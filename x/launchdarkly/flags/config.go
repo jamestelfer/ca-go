@@ -11,11 +11,17 @@ import (
 	lddynamodb "github.com/launchdarkly/go-server-sdk-dynamodb"
 	ld "gopkg.in/launchdarkly/go-server-sdk.v5"
 	"gopkg.in/launchdarkly/go-server-sdk.v5/ldcomponents"
+	"gopkg.in/launchdarkly/go-server-sdk.v5/ldfiledata"
+	"gopkg.in/launchdarkly/go-server-sdk.v5/ldfilewatch"
+	"gopkg.in/launchdarkly/go-server-sdk.v5/testhelpers/ldtestdata"
 )
 
 var errClientNotConfigured = errors.New("client not configured")
 
-const configurationEnvVar = "LAUNCHDARKLY_CONFIGURATION"
+const (
+	configurationEnvVar = "LAUNCHDARKLY_CONFIGURATION"
+	flagsJSONFilename   = ".ld-flags.json"
+)
 
 // configurationJSON declares the structure of the LAUNCHDARKLY_CONFIGURATION
 // environment variable.
@@ -42,6 +48,14 @@ type ProxyModeConfig struct {
 type LambdaModeConfig struct {
 	DynamoCacheTTL time.Duration
 	DynamoBaseURL  string
+}
+
+// TestModeConfig declares configuration for running the client in test
+// mode. Provide an instance of this struct if you wish to use a local
+// JSON file as the source of flag data.
+type TestModeConfig struct {
+	FlagFilename string
+	datasource   *ldtestdata.TestDataSource
 }
 
 // ConfigOption are functions that can be supplied to Configure and NewClient to
@@ -74,6 +88,19 @@ func WithProxyMode(cfg *ProxyModeConfig) ConfigOption {
 	return func(c *Client) {
 		c.mode = modeProxy
 		c.proxyModeConfig = cfg
+	}
+}
+
+// WithTestMode configures the client in test mode. No connections are made
+// to LaunchDarkly in this mode; all flag results are sourced from a local
+// JSON file or at runtime through a dynamic test data source. See
+// https://docs.launchdarkly.com/sdk/features/test-data-sources and
+// https://docs.launchdarkly.com/sdk/features/flags-from-files for more
+// information on test data sources.
+func WithTestMode(cfg *TestModeConfig) ConfigOption {
+	return func(c *Client) {
+		c.mode = modeTest
+		c.testModeConfig = cfg
 	}
 }
 
@@ -128,5 +155,34 @@ func configForLambdaMode(env configurationJSON, cfg *LambdaModeConfig) ld.Config
 	return ld.Config{
 		DataSource: ldcomponents.ExternalUpdatesOnly(),
 		DataStore:  datastore,
+	}
+}
+
+func configForTestMode(cfg *TestModeConfig) ld.Config {
+	// 1. If a .ld-flags.json file exists in the directory the binary was
+	// executed from, use that as the test data source.
+	if _, err := os.Stat(flagsJSONFilename); err == nil {
+		return ld.Config{
+			DataSource: ldfiledata.DataSource().
+				FilePaths(flagsJSONFilename).Reloader(ldfilewatch.WatchFiles),
+			Events: ldcomponents.NoEvents(),
+		}
+	}
+
+	// 2. If the filename of a JSON file was provided, use that as the
+	// test data source.
+	if cfg != nil && cfg.FlagFilename != "" {
+		return ld.Config{
+			DataSource: ldfiledata.DataSource().
+				FilePaths(cfg.FlagFilename).Reloader(ldfilewatch.WatchFiles),
+			Events: ldcomponents.NoEvents(),
+		}
+	}
+
+	// 3. Use the dynamic test data source which can be modified at runtime.
+	cfg.datasource = ldtestdata.DataSource()
+	return ld.Config{
+		DataSource: cfg.datasource,
+		Events:     ldcomponents.NoEvents(),
 	}
 }
