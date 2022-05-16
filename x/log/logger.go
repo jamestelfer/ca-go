@@ -87,18 +87,6 @@ func NewFromRequest(r *http.Request) *Logger {
 	return NewFromCtx(r.Context())
 }
 
-// this is copied from Glamplify, should we keep the getErrorValues() method or
-// just using the location info provided by logrus.WithError()?
-// WithError provides location info like this:
-//   "file": "/Users/aimee.geng/develop/fusionauth-hooks/src/extuserupdate/lib/main.go:28",
-//  "func": "main.main",
-func (logger *Logger) WithErrorTrace(err error) *Logger {
-	df := newErrorValues()
-	return &Logger{
-		logger.WithFields(df.getErrorValues(err)).WithError(err),
-	}
-}
-
 func (logger *Logger) WithDatadogHook() {
 
 }
