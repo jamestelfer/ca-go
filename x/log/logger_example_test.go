@@ -27,6 +27,20 @@ func Example() {
 
 	_ = createHandler(ctx)
 	logger.Debug("initialise handler")
+	// Output
+	//{
+	//  "AppName": "my-app",
+	//  "AppVersion": "1.0.0",
+	//  "AwsRegion": "",
+	//  "CorrelationID": "id2",
+	//  "Farm": "test",
+	//  "RequestID": "id1",
+	//  "file": "path/to/file.go:38",
+	//  "func": "package.function",
+	//  "level": "debug",
+	//  "msg": "initialise handler",
+	//  "time": "2022-05-17T11:44:08+10:00"
+	//}
 }
 
 func createHandler(ctx context.Context) func() {
@@ -38,7 +52,7 @@ func createHandler(ctx context.Context) func() {
 			logger.WithError(err).Error("process failed")
 		}
 
-		logger.WithFields(map[string]interface{}{
+		logger.WithFields(map[string]any{
 			"key1": "val1",
 			"key2": "val2",
 		}).Debug("process finished")
