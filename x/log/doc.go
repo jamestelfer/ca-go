@@ -31,7 +31,7 @@ package log
 //    logger.WithFields(map[string]any{
 //      "key1": "val1",
 //      "key2": "val2",
-//    }).Debug("something happended")
+//    }).Debug("something happened")
 //
 // Errors can be reported using WithError():
 //    logger.WithError(err).Error("something went wrong")

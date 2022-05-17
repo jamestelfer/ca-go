@@ -3,6 +3,7 @@ package log_test
 import (
 	"context"
 	"fmt"
+
 	"github.com/cultureamp/ca-go/x/log"
 	"github.com/cultureamp/ca-go/x/request"
 )

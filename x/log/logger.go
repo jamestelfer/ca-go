@@ -3,11 +3,12 @@ package log
 import (
 	"context"
 	"encoding/json"
-	"github.com/cultureamp/ca-go/x/request"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/cultureamp/ca-go/x/request"
+	"github.com/sirupsen/logrus"
 )
 
 type Logger struct {
@@ -39,8 +40,11 @@ func setupDefaultFormatter(config EnvConfig) {
 
 func convertFields(fields any) map[string]any {
 	var fieldsMap map[string]interface{}
-	data, _ := json.Marshal(fields)
-	err := json.Unmarshal(data, &fieldsMap)
+	data, err := json.Marshal(fields)
+	if err != nil {
+		log.WithError(err).Error("failed to parse logger fields from context")
+	}
+	err = json.Unmarshal(data, &fieldsMap)
 	if err != nil {
 		log.WithError(err).Error("failed to parse logger fields from context")
 	}
