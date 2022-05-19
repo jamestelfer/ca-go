@@ -14,7 +14,7 @@ func ExampleResponse_AddError() {
 
 	fmt.Println(string(er.MustSerialize()))
 	// Output:
-	// {"errors":[{"title":"title",description":"description","id":"id"}]}
+	// {"errors":[{"title":"title"}]}
 }
 
 func ExampleResponse_Add() {
