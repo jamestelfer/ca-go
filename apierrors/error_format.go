@@ -35,7 +35,6 @@ func NewApiErrorFormatter() func(error) goahttp.Statuser {
 }
 
 func formatApiError(idGenerator errorIDGenerator, err error) goahttp.Statuser {
-
 	//
 	// Using this function as a formatter bypasses
 	// both the generic error handling logic and the
@@ -49,7 +48,7 @@ func formatApiError(idGenerator errorIDGenerator, err error) goahttp.Statuser {
 	//
 
 	// for a goa error, map it to an API error
-	if serr, ok := err.(*goa.ServiceError); ok {
+	if serr, ok := err.(*goa.ServiceError); ok { //nolint:errorlint // we're deliberately only wanting to test for top-level ServiceError
 		return mapServiceErrorToApiErrorResponse(serr)
 	}
 
@@ -111,7 +110,6 @@ func serviceErrorStatusCode(serviceError *goa.ServiceError) int {
 }
 
 func isGeneratedErrorType(err error) bool {
-
 	// does it look like a Goa-generated JSON API error?
 	// not attempting perfection, having "gen" in the package name
 	// and an array field called "errors" is enough

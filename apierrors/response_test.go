@@ -25,6 +25,7 @@ func ExampleResponse_Add() {
 	})
 
 	fmt.Println(string(er.MustSerialize()))
+
 	// Output:
 	// {"errors":[{"title":"Unexpected error","detail":"Further error details (without including internal information)","id":"Request ID or similar"}]}
 }
