@@ -66,3 +66,9 @@ jobs:
           path-to-profile: artifacts/count.out
         env:
           COVERALLS_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
+
+      - name: Coveralls report
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.github_token }}
+          parallel-finished: true
