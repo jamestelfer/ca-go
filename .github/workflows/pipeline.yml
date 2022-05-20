@@ -64,6 +64,8 @@ jobs:
       - uses: shogo82148/actions-goveralls@v1
         with:
           path-to-profile: artifacts/count.out
+          flag-name: "go"
+          parallel: true
         env:
           COVERALLS_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
 
